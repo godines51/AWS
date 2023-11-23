@@ -65,7 +65,7 @@ int main() {
     // Loop para processar os arquivos de 1 a 58
     for (int fileNumber = 1; fileNumber <= 58; fileNumber++) {
         char fileName[20];
-        sprintf(fileName, "E_%d", fileNumber);
+        sprintf(fileName, "input/E_%d", fileNumber);
 
         rider riders[MAX_RIDERS];
         int n;
