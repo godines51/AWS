@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 #define MAX_RIDERS 10000
 
@@ -9,6 +8,7 @@ typedef struct {
     int d; // Direção do usuário: 0 para esquerda, 1 para direita
 } rider;
 
+// Função para ler os dados do arquivo
 void readData(char* filePath, rider* riders, int* n) {
     FILE* file = fopen(filePath, "r");
     if (file == NULL) {
@@ -24,89 +24,61 @@ void readData(char* filePath, rider* riders, int* n) {
     fclose(file);
 }
 
+// Função que simula o funcionamento da escada rolante
 int escalator(rider* riders, int n) {
-    rider currentRider = riders[0];
-
-    int mainIndex = 0;
-    int estArrival;
-
-    rider pendingRiders[MAX_RIDERS];
-    int remainingRiders = n;
-
-    int lastMoment = 0;
-    int direction = -1;
     int moment = 0;
+    int direction = -1;
+    int waiting = 0;
 
-    bool pending = false;
-
-    while (remainingRiders > 0) {
-        if (pending && (riders[mainIndex].t > estArrival || mainIndex >= n)) {
-            currentRider = pendingRiders[0];
-            moment += 10;
-            direction = currentRider.d;
-            estArrival = moment + 10;
-            remainingRiders--;
-            pending = false;
-        } else {
-            currentRider = riders[mainIndex];
-
-            if (direction == -1) {
-                moment = currentRider.t < moment ? moment : currentRider.t;
-                direction = currentRider.d;
-                estArrival = currentRider.t + 10;
-
-                mainIndex++;
-                remainingRiders--;
-            } else if (direction == currentRider.d) {
-                moment = currentRider.t;
-                estArrival = currentRider.t + 10;
-
-                mainIndex++;
-                remainingRiders--;
+    for (int i = 0; i < n; i++) {
+        if (riders[i].t < moment) {
+            // Usuário chegou antes do momento atual
+            if (riders[i].d == direction) {
+                moment = riders[i].t + 10;
             } else {
-                if (riders[mainIndex + 1].t - riders[mainIndex].t > riders[mainIndex - 1].t) {
-                    moment = estArrival;
-                    direction = -1;
-                } else if (riders[mainIndex + 1].t <= estArrival) {
-                    pendingRiders[0] = riders[mainIndex];
-                    pending = true;
-                    mainIndex++;
-                }
+                waiting = 1; // Alguém está esperando na fila
             }
+        } else {
+            // Usuário chegou no momento ou depois do momento atual
+            if (waiting) {
+                // Se alguém estava esperando, incrementa 10 no tempo e reseta direção
+                moment += 10;
+                direction = -1;
+                i--; // Reprocessa a mesma pessoa
+            } else {
+                // Se não havia ninguém esperando, atualiza o tempo e direção
+                moment = riders[i].t + 10;
+                direction = riders[i].d;
+            }
+            waiting = 0; // Reseta a flag de espera
         }
     }
 
-    moment += 10;
-    lastMoment = moment;
+    if (waiting) {
+        moment += 10; // Se há alguém esperando no final, incrementa 10 no tempo
+    }
 
-    return lastMoment;
+    return moment;
 }
 
 int main() {
-    rider riders[MAX_RIDERS];
-    int n;
+    // Loop para processar os arquivos de 1 a 58
+    for (int fileNumber = 1; fileNumber <= 58; fileNumber++) {
+        char fileName[20];
+        sprintf(fileName, "E_%d", fileNumber);
 
-    int fileNumber;
-    printf("Digite o número do arquivo (1-58): ");
-    scanf("%d", &fileNumber);
+        rider riders[MAX_RIDERS];
+        int n;
 
-    if (fileNumber < 1 || fileNumber > 58) {
-        printf("Número de arquivo inválido. Insira um valor entre 1 e 58.\n");
-        return 1;
+        // Chama a função para ler os dados do arquivo
+        readData(fileName, riders, &n);
+
+        // Chama a função para simular o funcionamento da escada rolante
+        int lastMoment = escalator(riders, n);
+
+        // Imprime o resultado para o arquivo específico
+        printf("Resultado para o arquivo %s: O último momento em que a escada para é %d\n", fileName, lastMoment);
     }
-
-    char fileName[20];
-    sprintf(fileName, "E_%d", fileNumber);
-
-    // Chama a função para ler os dados do arquivo
-    readData(fileName, riders, &n);
-
-    // Chama a função para simular o funcionamento da escada rolante
-    int lastMoment = escalator(riders, n);
-
-    // Imprime o resultado para o arquivo especificado pelo usuário
-    printf("Resultado para o arquivo %s: O último momento em que a escada para é %d\n", fileName, lastMoment);
 
     return 0;
 }
-
