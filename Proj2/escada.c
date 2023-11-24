@@ -8,7 +8,7 @@ typedef struct {
     int d;
 } rider;
 
-int solve(rider* riders, int n) {
+int escada(rider* riders, int n) {
     int moment = riders[0].t + 10;
     int waiting = 0;
     int direction = riders[0].d;
@@ -81,7 +81,7 @@ int main() {
         readData(inputFileName, riders, &n);
         readExpectedOutput(outputFileName, &expectedOutput);
 
-        int lastMoment = solve(riders, n);
+        int lastMoment = escada(riders, n);
 
         printf("Para %s: Último momento em que a escada para: %d. Resposta esperada: %d\n", inputFileName, lastMoment, expectedOutput);
     }
